@@ -11,7 +11,9 @@ const wss = new WebSocket.Server({ server });
 app.use(cors());
 app.use(express.json());
 
-const TELEGRAM_TOKEN = '8471506288:AAEx0MXIR6QbXopPb9RNprsUlBwE2AShGuo';
+// Render ke liye PORT fix
+const PORT = process.env.PORT || 8080;
+const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8471506288:AAEx0MXIR6QbXopPb9RNprsUlBwE2AShGuo';
 const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: true });
 
 let currentAccount = {
@@ -57,7 +59,6 @@ wss.on('connection', (ws) => {
 });
 
 function handleExtensionMessage(data, ws) {
-    // Handle extension messages if needed
     console.log('Message received:', data.action);
 }
 
@@ -118,20 +119,12 @@ bot.onText(/🔄 Update All/, (msg) => {
 
 bot.onText(/✅ Activate All/, (msg) => {
     const count = broadcastToExtensions({ action: 'toggle_active', data: { active: true } });
-    
-    bot.sendMessage(msg.chat.id, 
-        '✅ Activated ' + count + ' extensions', 
-        { parse_mode: 'Markdown' }
-    );
+    bot.sendMessage(msg.chat.id, '✅ Activated ' + count + ' extensions', { parse_mode: 'Markdown' });
 });
 
 bot.onText(/❌ Deactivate All/, (msg) => {
     const count = broadcastToExtensions({ action: 'toggle_active', data: { active: false } });
-    
-    bot.sendMessage(msg.chat.id, 
-        '❌ Deactivated ' + count + ' extensions', 
-        { parse_mode: 'Markdown' }
-    );
+    bot.sendMessage(msg.chat.id, '❌ Deactivated ' + count + ' extensions', { parse_mode: 'Markdown' });
 });
 
 bot.onText(/🔁 Reset Default/, (msg) => {
@@ -168,7 +161,6 @@ bot.on('message', (msg) => {
     const text = msg.text;
     const session = userSessions[chatId];
     
-    // Skip if not in session or if it's a command button
     if (!session || !session.waitingFor || 
         ['👁️ View Account', '🔄 Update All', '✅ Activate All', '❌ Deactivate All', 
          '🔁 Reset Default', '📊 Status'].includes(text)) {
@@ -246,8 +238,9 @@ app.get('/', (req, res) => {
     });
 });
 
-server.listen(8080, () => {
-    console.log('🚀 Server running on http://localhost:8080');
+// Render ke liye 0.0.0.0 bind karo
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running on port ${PORT}`);
     console.log('🤖 Telegram Bot Started!');
     console.log('📡 WebSocket ready for connections');
 });
